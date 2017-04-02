@@ -1,0 +1,3 @@
+[submodule "submodules/language-detection"]
+	path = submodules/language-detection
+	url = https://github.com/shuyo/language-detection.git
