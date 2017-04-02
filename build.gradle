@@ -44,7 +44,7 @@ jar {
     manifest {
         attributes("Implementation-Title": "Hanji",
                    "Implementation-Version": version,
-                   "Main-Class": "org.codelove.irc.bot.Bot")
+                   "Main-Class": "org.codelove.irc.hanji.Hanji")
     }
     from {
       configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
