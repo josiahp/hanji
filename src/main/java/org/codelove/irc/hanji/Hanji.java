@@ -7,60 +7,50 @@
 
 package org.codelove.irc.hanji;
 
-import java.util.HashMap;
-
 import org.pircbotx.Configuration;
 import org.pircbotx.PircBotX;
 import org.pircbotx.hooks.ListenerAdapter;
 import org.pircbotx.hooks.events.MessageEvent;
+import org.pircbotx.hooks.events.PrivateMessageEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cybozu.labs.langdetect.Detector;
 import com.cybozu.labs.langdetect.DetectorFactory;
-import com.cybozu.labs.langdetect.LangDetectException;
 
 public class Hanji extends ListenerAdapter {
 	Logger logger = LoggerFactory.getLogger(Hanji.class);
 
-	HashMap<String, Integer> scores = new HashMap<String, Integer>();
+	static HanjiLanguageDetector scores;
 
 	@Override
 	public void onMessage(MessageEvent event) {
-		if (event.getMessage().startsWith(".scores")) {
-			scores.forEach((k, v) -> event.getChannel().send().message(k + ": " + v));
-		}
+		scores.handleMessageEvent(event);
+	}
 
-		try {
-			Detector detector = DetectorFactory.create();
-			detector.append(event.getMessage());
-
-			String lang = detector.detect();
-			logger.info(lang + ": " + event.getMessage());
-
-			Integer score = scores.get(event.getUser().getNick());
-			if (score == null)
-				score = 0;
-
-			if (lang.equals("ja"))
-				score++;
-
-			scores.put(event.getUser().getNick(), score);
-		} catch (LangDetectException e) {
-			e.printStackTrace();
-		}
-
+	@Override
+	public void onPrivateMessage(PrivateMessageEvent event) {
+		scores.handlePrivateMessageEvent(event);
 	}
 
 	public static void main(String[] args) throws Exception {
-		DetectorFactory.loadProfile(System.getProperty("profiles", "./profiles"));
+		DetectorFactory.loadProfile(System.getProperty("hanji.profilesDir", "./profiles"));
+		scores = HanjiLanguageDetector.load(System.getProperty("hanji.scoresFile", "scores.bin"));
+
+		if (scores == null) {
+			scores = new HanjiLanguageDetector();
+			scores.save(System.getProperty("hanji.scoresFile", "scores.bin"));
+		}
 
 		// Configure what we want our bot to do
-		Configuration configuration = new Configuration.Builder().setRealName("判事").setName("hanji")
-				.addServer("irc.slashnet.org").addAutoJoinChannel("#japanese").addListener(new Hanji())
-				.buildConfiguration();
+		Configuration configuration = new Configuration.Builder().setRealName(System.getProperty("hanji.name", "判事"))
+				.setName(System.getProperty("hanji.nick", "hanji"))
+				.addServer(System.getProperty("hanji.server", "irc.slashnet.org"))
+				.addAutoJoinChannel(System.getProperty("hanji.channel", "#japanese"))
+				.setAutoReconnect(Boolean.parseBoolean(System.getProperty("hanji.autoReconnect", "true")))
+				.setMessageDelay(150).addListener(new Hanji()).buildConfiguration();
 
 		PircBotX bot = new PircBotX(configuration);
 		bot.startBot();
+		bot.close();
 	}
 }
