@@ -69,13 +69,13 @@ public class HanjiLanguageDetector extends HashMap<String, HashMap<String, Integ
 	public void handleCommand(GenericMessageEvent event) {
 		if (event.getMessage().startsWith(".scoreboard")) {
 			logger.debug(".scoreboard -> getScoreBoard(" + event.getUser().getNick() + ")");
-			event.respondWith(getScoreBoard());
+			getScoreBoard().forEach(m -> event.respondWith(m));
 		} else if (event.getMessage().startsWith(".score")) {
 			logger.debug(".score -> getScore(" + event.getUser().getNick() + ")");
 			event.respond(getScore(event.getUser().getNick()));
 		} else if (event.getMessage().startsWith(".coolboard")) {
 			logger.debug(".coolboard -> getPercentages(" + event.getUser().getNick() + ")");
-			event.respondWith(getPercentages());
+			getPercentages().forEach(m -> event.respondWith(m));
 		} else if (event.getMessage().startsWith(".cool")) {
 			logger.debug(".cool -> getPercentage(" + event.getUser().getNick() + ")");
 			event.respond(getPercentage(event.getUser().getNick()));
@@ -98,19 +98,19 @@ public class HanjiLanguageDetector extends HashMap<String, HashMap<String, Integ
 		return this.get(nickname).get("japanese").toString();
 	}
 
-	public String getScoreBoard() {
-		return this.keySet().stream().map(k -> k + ": " + getScore(k)).collect(Collectors.joining("\n"));
+	public List<String> getScoreBoard() {
+		return this.keySet().stream().map(k -> k + ": " + getScore(k)).collect(Collectors.toList());
 	}
 
 	public String getPercentage(String nickname) {
 		Integer totalLines = this.get(nickname).get("japanese") + this.get(nickname).get("other");
 		logger.info(this.get(nickname).get("japanese") + " / " + totalLines + " = "
 				+ ((float) this.get(nickname).get("japanese") / (float) totalLines));
-		return (int) (((float) this.get(nickname).get("japanese") / totalLines) * 100.0f) + "% cool\n";
+		return (int) (((float) this.get(nickname).get("japanese") / totalLines) * 100.0f) + "% cool";
 	}
 
-	public String getPercentages() {
-		return this.keySet().stream().map(k -> k + ": " + getPercentage(k)).collect(Collectors.joining("\n"));
+	public List<String> getPercentages() {
+		return this.keySet().stream().map(k -> k + ": " + getPercentage(k)).collect(Collectors.toList());
 	}
 
 	public static HanjiLanguageDetector load(String filename) {
