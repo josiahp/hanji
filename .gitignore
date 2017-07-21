@@ -4,3 +4,8 @@
 .settings/
 bin/
 build/
+scores.bin
+*.log
+*.log.gz
+.AppleDouble
+hanji.pid
